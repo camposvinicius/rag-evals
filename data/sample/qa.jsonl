@@ -1,0 +1,15 @@
+{"id": "q-001", "question": "How do I authenticate API requests?", "relevant_doc_ids": ["doc-002"]}
+{"id": "q-002", "question": "What happens when I exceed the rate limit?", "relevant_doc_ids": ["doc-003"]}
+{"id": "q-003", "question": "How is compute billed?", "relevant_doc_ids": ["doc-004"]}
+{"id": "q-004", "question": "What is the maximum size of an object in object storage?", "relevant_doc_ids": ["doc-005"]}
+{"id": "q-005", "question": "How much cheaper are spot instances?", "relevant_doc_ids": ["doc-006"]}
+{"id": "q-006", "question": "How often do load balancers run health checks?", "relevant_doc_ids": ["doc-007"]}
+{"id": "q-007", "question": "How long are metrics and logs retained?", "relevant_doc_ids": ["doc-008"]}
+{"id": "q-008", "question": "What uptime does the SLA guarantee for object storage?", "relevant_doc_ids": ["doc-009"]}
+{"id": "q-009", "question": "Which compliance certifications does the platform have?", "relevant_doc_ids": ["doc-010"]}
+{"id": "q-010", "question": "How long are database snapshots kept?", "relevant_doc_ids": ["doc-011"]}
+{"id": "q-011", "question": "What quota do new projects start with?", "relevant_doc_ids": ["doc-012"]}
+{"id": "q-012", "question": "Can I get a refund if the service goes down?", "relevant_doc_ids": ["doc-009"]}
+{"id": "q-013", "question": "How do I keep my data in one region and encrypted?", "relevant_doc_ids": ["doc-010"]}
+{"id": "q-014", "question": "How do I recover my database after an outage in a region?", "relevant_doc_ids": ["doc-011"]}
+{"id": "q-015", "question": "What does it cost to store data and how can I reduce storage spend over time?", "relevant_doc_ids": ["doc-004", "doc-005"]}
