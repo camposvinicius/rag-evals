@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rag-evals"
+version = "0.1.0"
+description = "CI-friendly evaluation harness for RAG pipelines: retrieval metrics, optional LLM-as-judge, and a regression gate."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Vinicius Campos" }]
+keywords = ["rag", "llm", "evaluation", "evals", "retrieval", "regression-testing"]
+
+dependencies = [
+  "rank-bm25>=0.2.2",
+  "pydantic>=2.6",
+  "click>=8.1",
+]
+
+[project.optional-dependencies]
+judge = ["httpx>=0.27"]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+  "httpx>=0.27",
+]
+
+[project.scripts]
+ragevals = "ragevals.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ragevals"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
