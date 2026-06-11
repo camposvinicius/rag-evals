@@ -82,6 +82,14 @@ search API — anything works: rag-evals only needs the ranked ids. See
 Every annotated question must have an entry (an empty list — "retriever
 found nothing" — is valid; a missing entry is an error).
 
+Try it right now against the sample QA set with a bundled example file
+(an idealized retriever that beats the BM25 baseline):
+
+```bash
+ragevals run --qa data/sample/qa.jsonl \
+  --retrieved examples/retrieved_jsonl/retrieved.jsonl --output runs/external.json
+```
+
 When a metric drops and you need to know *which* queries got worse:
 
 ```bash

@@ -1,0 +1,15 @@
+{"qa_id": "q-001", "retrieved_doc_ids": ["doc-002", "doc-003", "doc-001", "doc-004", "doc-005"]}
+{"qa_id": "q-002", "retrieved_doc_ids": ["doc-003", "doc-002", "doc-008", "doc-012", "doc-001"]}
+{"qa_id": "q-003", "retrieved_doc_ids": ["doc-006", "doc-012", "doc-004", "doc-001", "doc-007"]}
+{"qa_id": "q-004", "retrieved_doc_ids": ["doc-005", "doc-001", "doc-012", "doc-010", "doc-011"]}
+{"qa_id": "q-005", "retrieved_doc_ids": ["doc-006", "doc-004", "doc-001", "doc-012", "doc-007"]}
+{"qa_id": "q-006", "retrieved_doc_ids": ["doc-007", "doc-008", "doc-001", "doc-006", "doc-003"]}
+{"qa_id": "q-007", "retrieved_doc_ids": ["doc-008", "doc-009", "doc-001", "doc-010", "doc-003"]}
+{"qa_id": "q-008", "retrieved_doc_ids": ["doc-009", "doc-005", "doc-001", "doc-010", "doc-008"]}
+{"qa_id": "q-009", "retrieved_doc_ids": ["doc-010", "doc-001", "doc-009", "doc-002", "doc-005"]}
+{"qa_id": "q-010", "retrieved_doc_ids": ["doc-011", "doc-005", "doc-001", "doc-010", "doc-012"]}
+{"qa_id": "q-011", "retrieved_doc_ids": ["doc-012", "doc-001", "doc-007", "doc-005", "doc-006"]}
+{"qa_id": "q-012", "retrieved_doc_ids": ["doc-009", "doc-004", "doc-001", "doc-010", "doc-011"]}
+{"qa_id": "q-013", "retrieved_doc_ids": ["doc-010", "doc-001", "doc-005", "doc-009", "doc-002"]}
+{"qa_id": "q-014", "retrieved_doc_ids": ["doc-011", "doc-007", "doc-001", "doc-010", "doc-009"]}
+{"qa_id": "q-015", "retrieved_doc_ids": ["doc-004", "doc-005", "doc-001", "doc-012", "doc-006"]}
