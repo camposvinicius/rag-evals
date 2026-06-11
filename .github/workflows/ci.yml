@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Unit tests
+        run: pytest
+
+      # The eval itself runs in CI — offline, deterministic, no API keys.
+      - name: Run eval on sample dataset
+        run: ragevals run --corpus data/sample/corpus.jsonl --qa data/sample/qa.jsonl --output runs/run.json
+
+      - name: Regression gate
+        run: ragevals check --run runs/run.json
