@@ -23,9 +23,13 @@ qa.jsonl ──────┘                                                  
 - **`ragevals run`** retrieves for every annotated question and scores
   recall@k, precision@k, hit-rate@k, MRR and nDCG@k. With
   `--with-generation` it also generates a grounded answer per query and has
-  an LLM judge score its faithfulness to the retrieved context.
+  an LLM judge score its faithfulness to the retrieved context. With
+  `--retrieved` it scores results exported from **your own RAG stack**
+  instead of running the built-in retriever.
 - **`ragevals check`** compares a run against `baselines/baseline.json` and
   exits 1 if any retrieval metric drops more than the configured tolerance.
+- **`ragevals diff`** compares two runs per query — which questions got
+  worse, what was retrieved before and after.
 - **`ragevals update-baseline`** promotes a good run to be the new baseline —
   the quality equivalent of updating a lockfile, reviewable in the PR diff.
 
@@ -53,6 +57,44 @@ Evaluated 15 queries (k=5)
   hit_rate@5     0.9333
   mrr            0.8556
   ndcg@5         0.8754
+```
+
+## Evaluate your own RAG pipeline
+
+The built-in BM25 retriever exists so the harness is demonstrable and CI
+stays offline — but the harness is **stack-agnostic**. Export your
+retriever's results as JSONL (one line per annotated question):
+
+```json
+{"qa_id": "q-001", "retrieved_doc_ids": ["doc-002", "doc-001"]}
+```
+
+and score them with:
+
+```bash
+ragevals run --qa qa.jsonl --retrieved retrieved.jsonl --output runs/run.json
+ragevals check --run runs/run.json
+```
+
+LangChain, LlamaIndex, Elasticsearch, pgvector, OpenSearch, an internal
+search API — anything works: rag-evals only needs the ranked ids. See
+[examples/export_retrieved.py](examples/export_retrieved.py) for a template.
+Every annotated question must have an entry (an empty list — "retriever
+found nothing" — is valid; a missing entry is an error).
+
+When a metric drops and you need to know *which* queries got worse:
+
+```bash
+ragevals diff --baseline runs/old.json --run runs/new.json --metric mrr
+```
+
+```
+Worst regressions (mrr):
+  q-015  1.0000 -> 0.0000  (-1.0000)
+      Q: What does it cost to store data and how can I reduce storage spend over time?
+      relevant:  doc-004, doc-005
+      baseline retrieved: doc-004, doc-010, doc-001, doc-006, doc-002
+      current retrieved:  doc-010, doc-001, doc-006, doc-002, doc-011
 ```
 
 ### With the LLM judge (AWS Bedrock)
@@ -111,21 +153,35 @@ measures them separately.
 - **Separate generator and judge models** (configurable) to avoid
   self-grading bias.
 
+## File schemas
+
+All files are JSONL (one JSON object per line) except the run/baseline JSON:
+
+| File | Shape | Notes |
+|---|---|---|
+| `corpus.jsonl` | `{"id", "title", "text"}` | ids unique, text non-empty |
+| `qa.jsonl` | `{"id", "question", "relevant_doc_ids": [..]}` | the human annotation; ids must exist in the corpus when one is provided |
+| `retrieved.jsonl` | `{"qa_id", "retrieved_doc_ids": [..]}` | rank order, best first; one entry per QA id |
+| `run.json` | `{"config", "aggregates", "per_query": [..]}` | written by `run`; `generation_aggregates` added by `--with-generation` |
+| `baseline.json` | `{"config", "aggregates"}` | written by `update-baseline`; deliberately aggregates-only |
+
 ## Repository layout
 
 ```
 src/ragevals/
   config.py             # env-driven settings (fail-fast validation)
-  datasets.py           # JSONL corpus + QA loaders, strict validation
+  datasets.py           # JSONL corpus + QA + retrieved-results loaders
   retrieval.py          # Retriever protocol + BM25 implementation
   runner.py             # eval loop, aggregation, generation eval
   regression.py         # baseline comparison (the gate)
+  diff.py               # per-query comparison between two runs
   generation.py         # grounded answer generation
   metrics/
     retrieval.py        # recall@k, precision@k, hit-rate@k, MRR, nDCG@k
     judge.py            # LLMClient protocol, BedrockClient, faithfulness
-  cli.py                # run / check / update-baseline
+  cli.py                # run / check / diff / update-baseline
 data/sample/            # fictional cloud-platform docs + annotated QA
+examples/               # template for exporting your stack's results
 baselines/baseline.json # committed quality baseline (the "lockfile")
 .github/workflows/ci.yml
 ```
@@ -136,9 +192,11 @@ the dataset is self-contained and license-clean.
 ## Roadmap
 
 - Dense retriever (embeddings) behind the same `Retriever` protocol — the
-  vocabulary-mismatch failure above is the motivating case.
+  vocabulary-mismatch failure above is the motivating case. (Until then,
+  dense stacks can already be evaluated through `--retrieved`.)
 - Judge calibration: agreement measurement against a hand-labeled subset.
 - Additional judge providers (Anthropic API, OpenAI) behind `LLMClient`.
+- Statistical gate (confidence intervals) for larger QA sets.
 
 ## License
 

@@ -36,6 +36,16 @@ class QueryResult:
 
 def evaluate_query(retriever: Retriever, example: QAExample, k: int) -> QueryResult:
     retrieved = retriever.retrieve(example.question, k)
+    return score_retrieved(example, retrieved, k)
+
+
+def score_retrieved(example: QAExample, retrieved: list[str], k: int) -> QueryResult:
+    """Score an already-retrieved ranking for one query.
+
+    Only the top-k of ``retrieved`` is considered, so externally produced
+    rankings longer than k are scored exactly like internal ones.
+    """
+    retrieved = retrieved[:k]
     relevant = set(example.relevant_doc_ids)
     scores = {
         f"recall@{k}": recall_at_k(retrieved, relevant, k),
@@ -56,9 +66,23 @@ def evaluate_query(retriever: Retriever, example: QAExample, k: int) -> QueryRes
 def run_eval(retriever: Retriever, qa_set: list[QAExample], k: int) -> dict:
     if not qa_set:
         raise ValueError("QA set is empty")
-
     results = [evaluate_query(retriever, example, k) for example in qa_set]
+    return _build_run_doc(results, k)
 
+
+def run_eval_from_results(
+    retrieved_by_qa_id: dict[str, list[str]], qa_set: list[QAExample], k: int
+) -> dict:
+    """Score precomputed retrieval results (the stack-agnostic entry point)."""
+    if not qa_set:
+        raise ValueError("QA set is empty")
+    results = [
+        score_retrieved(example, retrieved_by_qa_id[example.id], k) for example in qa_set
+    ]
+    return _build_run_doc(results, k)
+
+
+def _build_run_doc(results: list[QueryResult], k: int) -> dict:
     metric_names = results[0].scores.keys()
     aggregates = {
         name: sum(r.scores[name] for r in results) / len(results) for name in metric_names
