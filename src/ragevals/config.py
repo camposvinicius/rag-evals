@@ -20,6 +20,7 @@ class Settings:
     retriever: str
     judge_provider: str | None
     judge_model: str | None
+    generation_model: str | None
     regression_tolerance: float
 
     @classmethod
@@ -34,7 +35,8 @@ class Settings:
 
         judge_provider = os.environ.get("RAGEVALS_JUDGE_PROVIDER", "").lower() or None
         judge_model = os.environ.get("RAGEVALS_JUDGE_MODEL", "") or None
-        if judge_provider and judge_provider not in ("anthropic", "openai"):
+        generation_model = os.environ.get("RAGEVALS_GENERATION_MODEL", "") or None
+        if judge_provider and judge_provider not in ("bedrock",):
             raise ConfigError(f"Unsupported RAGEVALS_JUDGE_PROVIDER: {judge_provider!r}")
         if judge_provider and not judge_model:
             # Deliberate: no default judge model. Model choice affects results
@@ -50,5 +52,6 @@ class Settings:
             retriever=retriever,
             judge_provider=judge_provider,
             judge_model=judge_model,
+            generation_model=generation_model,
             regression_tolerance=tolerance,
         )

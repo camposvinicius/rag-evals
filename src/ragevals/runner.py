@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .datasets import QAExample
+from .datasets import Document, QAExample
+from .generation import generate_answer
+from .metrics.judge import LLMClient, judge_faithfulness
 from .metrics.retrieval import (
     hit_rate_at_k,
     ndcg_at_k,
@@ -76,3 +78,34 @@ def run_eval(retriever: Retriever, qa_set: list[QAExample], k: int) -> dict:
             for r in results
         ],
     }
+
+
+def run_generation_eval(
+    run_doc: dict,
+    documents: list[Document],
+    generator: LLMClient,
+    judge: LLMClient,
+) -> dict:
+    """Generate an answer per query from its retrieved docs, judge faithfulness.
+
+    Mutates ``run_doc`` in place: adds ``generation_aggregates`` and a
+    ``generation`` block per query. Generation metrics live in a separate
+    key (not ``aggregates``) on purpose: the regression gate runs offline
+    in CI without credentials, so judge metrics are informative, not gating.
+    """
+    docs_by_id = {d.id: d for d in documents}
+    scores = []
+
+    for query in run_doc["per_query"]:
+        contexts = [docs_by_id[doc_id].text for doc_id in query["retrieved_ids"]]
+        answer = generate_answer(generator, query["question"], contexts)
+        verdict = judge_faithfulness(judge, query["question"], answer, contexts)
+        query["generation"] = {
+            "answer": answer,
+            "faithfulness": verdict["score"],
+            "unsupported_claims": verdict["unsupported_claims"],
+        }
+        scores.append(verdict["score"])
+
+    run_doc["generation_aggregates"] = {"faithfulness": sum(scores) / len(scores)}
+    return run_doc

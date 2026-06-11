@@ -14,11 +14,11 @@ from pathlib import Path
 
 import click
 
-from .config import Settings
+from .config import ConfigError, Settings
 from .datasets import load_corpus, load_qa
 from .regression import compare
 from .retrieval import BM25Retriever
-from .runner import run_eval
+from .runner import run_eval, run_generation_eval
 
 
 @click.group()
@@ -30,7 +30,12 @@ def main() -> None:
 @click.option("--corpus", type=click.Path(exists=True, path_type=Path), required=True)
 @click.option("--qa", type=click.Path(exists=True, path_type=Path), required=True)
 @click.option("--output", type=click.Path(path_type=Path), default=Path("run.json"))
-def run(corpus: Path, qa: Path, output: Path) -> None:
+@click.option(
+    "--with-generation",
+    is_flag=True,
+    help="Also generate answers and judge their faithfulness (requires judge config).",
+)
+def run(corpus: Path, qa: Path, output: Path, with_generation: bool) -> None:
     """Evaluate retrieval quality and write the results to OUTPUT."""
     settings = Settings.from_env()
 
@@ -40,12 +45,26 @@ def run(corpus: Path, qa: Path, output: Path) -> None:
 
     result = run_eval(retriever, qa_set, k=settings.top_k)
 
+    if with_generation:
+        if not settings.judge_provider:
+            raise ConfigError("--with-generation requires RAGEVALS_JUDGE_PROVIDER")
+        if not settings.generation_model:
+            raise ConfigError("--with-generation requires RAGEVALS_GENERATION_MODEL")
+        from .metrics.judge import BedrockClient
+
+        generator = BedrockClient(model_id=settings.generation_model)
+        judge = BedrockClient(model_id=settings.judge_model)
+        result = run_generation_eval(result, documents, generator, judge)
+
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + "\n")
 
     click.echo(f"Evaluated {result['config']['num_queries']} queries (k={settings.top_k})")
     for name, value in result["aggregates"].items():
         click.echo(f"  {name:<14} {value:.4f}")
+    if "generation_aggregates" in result:
+        for name, value in result["generation_aggregates"].items():
+            click.echo(f"  {name:<14} {value:.4f}")
     click.echo(f"Wrote {output}")
 
 
